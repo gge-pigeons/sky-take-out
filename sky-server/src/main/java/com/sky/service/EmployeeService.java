@@ -22,5 +22,20 @@ public interface EmployeeService {
      */
     void save(EmployeeDTO employeeDTO);
 
+
+    /**
+     * 员工分页查询
+     * 对于查询类Result中泛型一般才写，一般查询类才有data返回，其他的可以不用加。
+     * @param employeePageQueryDTO
+     * @return
+     */
     PageResult pageQuery(EmployeePageQueryDTO employeePageQueryDTO);
+
+    /**
+     *启用禁用员工账号
+     * @param status  路径参数
+     * @param id
+     * @return
+     */
+    void startOrStop(Integer status, Long id);
 }

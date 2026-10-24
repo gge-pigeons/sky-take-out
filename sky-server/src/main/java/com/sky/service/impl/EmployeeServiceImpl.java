@@ -31,6 +31,26 @@ public class EmployeeServiceImpl implements EmployeeService {
     private EmployeeMapper employeeMapper;
 
     /**
+     *启用禁用员工账号
+     * @param status  路径参数
+     * @param id
+     * @return
+     */
+    @Override
+    public void startOrStop(Integer status, Long id) {
+        //update employee set status = ? and id = ?
+        //为了通用性，我们采用update方法，此时就需要传递一个实体类进去
+//        Employee employee = new Employee();
+//        employee.setId(id);
+//        employee.setStatus(status);
+        Employee employee = Employee.builder()
+                        .status(status)
+                        .id(id)
+                        .build();
+        employeeMapper.update(employee);
+    }
+
+    /**
      * 分页查询
      * @param employeePageQueryDTO
      * @return
