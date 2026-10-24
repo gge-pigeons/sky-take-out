@@ -46,16 +46,6 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
 
-    /**
-     * 根据id查询员工信息
-     * @param id
-     * @return
-     */
-    public Employee getById(Long id) {
-        Employee employee = employeeMapper.getById(id);
-        employee.setPassword("****");
-        return employee;
-    }
 
     /**
      *启用禁用员工账号
@@ -91,6 +81,18 @@ public class EmployeeServiceImpl implements EmployeeService {
         long total = page.getTotal();
         List<Employee> records = page.getResult();
         return new PageResult(total,records);
+    }
+
+
+    /**
+     * 根据id查询员工信息
+     * @param id
+     * @return
+     */
+    public Employee getById(Long id) {
+        Employee employee = employeeMapper.getById(id);
+        employee.setPassword("****");
+        return employee;
     }
 
     /**

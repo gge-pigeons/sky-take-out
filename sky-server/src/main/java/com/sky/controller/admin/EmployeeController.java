@@ -97,6 +97,17 @@ public class EmployeeController {
     }
 
     /**
+     * 根据id查询员工信息
+     * @param id
+     * @return
+     */
+    @GetMapping("/{id}")
+    public Result<Employee> getById(@PathVariable Long id){
+        Employee employee = employeeService.getById(id);
+        return Result.success(employee);
+    }
+
+    /**
      *启用禁用员工账号
      * @param status  路径参数
      * @param id
@@ -109,16 +120,7 @@ public class EmployeeController {
         return Result.success();
     }
 
-    /**
-     * 根据id查询员工信息
-     * @param id
-     * @return
-     */
-    @GetMapping("/{id}")
-    public Result<Employee> getById(@PathVariable Long id){
-        Employee employee = employeeService.getById(id);
-        return Result.success(employee);
-    }
+
 
     /**
      * 编辑员工信息
