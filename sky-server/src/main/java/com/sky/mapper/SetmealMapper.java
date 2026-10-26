@@ -14,6 +14,12 @@ import org.apache.ibatis.annotations.Select;
 public interface SetmealMapper {
 
     /**
+     * 修改setmeal的基本信息
+     * @param setmeal
+     */
+    void update(Setmeal setmeal);
+
+    /**
      * 根据id查询套餐
      * @param id
      * @return
