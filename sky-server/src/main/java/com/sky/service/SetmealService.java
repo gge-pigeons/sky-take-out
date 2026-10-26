@@ -8,6 +8,13 @@ import com.sky.vo.SetmealVO;
 import java.util.List;
 
 public interface SetmealService {
+    /**
+     * 套餐起售、停售
+     * @param status
+     * @param id
+     */
+    void startOrStop(Integer status, Long id);
+
 
     /**
      * 修改套餐
