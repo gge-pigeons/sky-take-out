@@ -18,6 +18,7 @@ import com.sky.vo.DishVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +37,50 @@ public class DishServiceImpl implements DishService {
     @Autowired
     private SetmealDishMapper setmealDishMapper;
 
+
+    /**
+     * 修改菜品
+     * @param dishDTO
+     * @return
+     */
+    public void updateWithFlavor(DishDTO dishDTO) {
+        //修改可能会修改两张表，一个是菜品表，一个是关联的口味表
+        //关联的口味修改就很复杂，有可能删除有可能增加，于是我们直接将原先的口味全部删除，然后按照前端传的DTO中的flavor进行添加即可
+        Dish dish = new Dish();
+        BeanUtils.copyProperties(dishDTO,dish);
+        //1.修改菜品表基本信息
+        dishMapper.update(dish);
+        //2.删除原有的口味信息
+        dishFlavorMapper.deleteByDishId(dishDTO.getId());
+        //3.重新插入口味信息
+        List<DishFlavor> flavors = dishDTO.getFlavors();
+        if(flavors!=null && flavors.size()>0){
+            //向口味表中插入n条数据
+            //不需要遍历flavors中的DishFlavor一条一条插入，sql支持批量插入
+            //此时我传递的前端页面中的flavors中并没有dishId的数据
+            flavors.forEach(dishFlavor->{
+                dishFlavor.setDishId(dishDTO.getId());
+            });
+            dishFlavorMapper.insertBatch(flavors);
+        }
+    }
+
+    /**
+     * 根据id查询出菜品数据和flavor进行回显
+     * @param id
+     * @return
+     */
+    public DishVO getByIdWithFlavor(Long id) {
+        //先根据id查询菜品表获取基本信息
+        Dish dish = dishMapper.getById(id);
+        //查询口味
+        List<DishFlavor> dishFlavors = dishFlavorMapper.getByDishId(id);
+        //将两部分数据封装到DishVO中
+        DishVO dishVO = new DishVO();
+        BeanUtils.copyProperties(dish,dishVO);
+        dishVO.setFlavors(dishFlavors);
+        return dishVO;
+    }
 
     /**
      * 菜品的批量删除
