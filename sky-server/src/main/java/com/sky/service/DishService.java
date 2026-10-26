@@ -51,4 +51,11 @@ public interface DishService {
      */
     @AutoFill(OperationType.UPDATE)
     void updateWithFlavor(DishDTO dishDTO);
+
+    /**
+     * 菜品的起售停售
+     * @param status id
+     * @return
+     */
+    void startOrStop(int status,Long id);
 }

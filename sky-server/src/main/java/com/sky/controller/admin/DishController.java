@@ -25,6 +25,18 @@ public class DishController {
 
 
     /**
+     * 菜品的起售停售
+     * @param status,id
+     * @return
+     */
+    @PostMapping("/status/{status}")
+    public Result startOrStop(@PathVariable int status,Long id){
+        log.info("菜品的起售停售");
+        dishService.startOrStop(status,id);
+        return Result.success();
+    }
+
+    /**
      * 根据id修改菜品基本信息和口味信息
      * @param dishDTO
      * @return
