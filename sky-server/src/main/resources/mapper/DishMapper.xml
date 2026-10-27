@@ -61,4 +61,21 @@
         </set>
         where id=#{id}
     </update>
+
+    <!--这么设计主要是为了可以输入菜品名来查找并且保证查到的菜品都是在售的-->
+    <select id="list" resultType="Dish" parameterType="Dish">
+        select * from dish
+        <where>
+            <if test="name != null">
+                and name like concat('%',#{name},'%')
+            </if>
+            <if test="categoryId != null">
+                and category_id = #{categoryId}
+            </if>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+        </where>
+        order by create_time desc
+    </select>
 </mapper>

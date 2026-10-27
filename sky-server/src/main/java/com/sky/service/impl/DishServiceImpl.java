@@ -39,6 +39,20 @@ public class DishServiceImpl implements DishService {
     private SetmealDishMapper setmealDishMapper;
 
     /**
+     * 根据分类id查找当前菜品分类的菜品
+     * @param categoryId
+     * @return
+     */
+    public List<Dish> list(Long categoryId) {
+//        return dishMapper.list(categoryId);
+        Dish dish=Dish.builder()
+                .categoryId(categoryId)
+                .status(1)
+                .build();
+        return dishMapper.list(dish);
+    }
+
+    /**
      * 菜品的起售停售
      * @param status
      * @return
