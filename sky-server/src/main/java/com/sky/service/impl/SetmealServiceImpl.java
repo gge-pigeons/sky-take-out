@@ -36,6 +36,19 @@ public class SetmealServiceImpl implements SetmealService {
     private DishMapper dishMapper;
 
     /**
+     * 根据分类id返回对应套餐
+     * @param categoryId
+     * @return
+     */
+    public List<Setmeal> list(Long categoryId) {
+        Setmeal setmeal = Setmeal.builder()
+                .categoryId(categoryId)
+                .status(StatusConstant.ENABLE)
+                .build();
+        return setmealMapper.list(setmeal);
+    }
+
+    /**
      * 套餐起售、停售
      * @param status
      * @param id

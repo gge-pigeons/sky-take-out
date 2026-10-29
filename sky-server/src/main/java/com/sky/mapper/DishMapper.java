@@ -82,4 +82,12 @@ public interface DishMapper {
      * @return
      */
     List<Dish> list(Dish dish);
+
+    /**
+     * 根据菜品名称获得菜品
+     * @param name
+     * @return
+     */
+    @Select("select * from dish where name=#{name}")
+    Dish getByName(String name);
 }
