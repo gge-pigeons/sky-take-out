@@ -9,9 +9,11 @@ import com.sky.service.DishService;
 import com.sky.vo.DishVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 
 /**
@@ -25,6 +27,8 @@ public class DishController {
     @Autowired
     private DishService dishService;
 
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     /**
      * 根据分类id查询菜品
@@ -46,6 +50,7 @@ public class DishController {
     public Result startOrStop(@PathVariable int status,Long id){
         log.info("菜品的起售停售");
         dishService.startOrStop(status,id);
+        CleanCache("dish_*");
         return Result.success();
     }
 
@@ -58,6 +63,7 @@ public class DishController {
     public Result update(@RequestBody DishDTO dishDTO){
         log.info("修改菜品:{}",dishDTO);
         dishService.updateWithFlavor(dishDTO);
+        CleanCache("dish_*");
         return Result.success();
     }
 
@@ -80,6 +86,8 @@ public class DishController {
     public Result delete(@RequestParam List<Long> ids){
         log.info("菜品批量删除:{}",ids);
         dishService.deleteBatch(ids);
+        //原本应该是查询有哪些ids然后删除对应分类id的那些菜品缓存，这里直接全删
+        CleanCache("dish_*");
         return Result.success();
     }
 
@@ -106,6 +114,18 @@ public class DishController {
     public Result save(@RequestBody DishDTO dishDTO){
         log.info("新增菜品:{}",dishDTO);
         dishService.saveWithFlavor(dishDTO);
+
+        //清理缓存数据，只需要清理新增的菜品所属分类的缓存即可
+        CleanCache("dish_"+dishDTO.getCategoryId());
         return Result.success();
+    }
+
+    /**
+     * 统一清理缓存数据
+     * @param pattren
+     */
+    private void CleanCache(String pattren){
+        Set keys = redisTemplate.keys(pattren);
+        redisTemplate.delete(keys);
     }
 }
