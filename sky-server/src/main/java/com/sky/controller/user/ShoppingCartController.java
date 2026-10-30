@@ -18,6 +18,27 @@ public class ShoppingCartController {
     @Autowired
     private ShoppingCartService shoppingCartService;
 
+    /**
+     * 减去一个商品
+     * @param shoppingCartDTO
+     * @return
+     */
+    @PostMapping("/sub")
+    public Result sub(@RequestBody ShoppingCartDTO shoppingCartDTO){
+        shoppingCartService.sub(shoppingCartDTO);
+        return Result.success();
+    }
+
+    /**
+     * 清空购物车
+     * @return
+     */
+    @DeleteMapping("/clean")
+    public Result clean(){
+        shoppingCartService.cleanShoppingCart();
+        return Result.success();
+    }
+
     @GetMapping("/list")
     public Result<List<ShoppingCart>> list(){
         List<ShoppingCart> list = shoppingCartService.showShoppingCart();

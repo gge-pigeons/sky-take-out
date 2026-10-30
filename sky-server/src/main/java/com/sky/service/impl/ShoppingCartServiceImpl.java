@@ -25,6 +25,37 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     @Autowired
     private SetmealMapper setmealMapper;
 
+
+    /**
+     * 减去一个商品
+     * @param shoppingCartDTO
+     */
+    public void sub(ShoppingCartDTO shoppingCartDTO) {
+        ShoppingCart shoppingCart = new ShoppingCart();
+        BeanUtils.copyProperties(shoppingCartDTO,shoppingCart);
+        shoppingCart.setUserId(BaseContext.getCurrentId());
+        //将要删去的信息传入一个shoppingcart对象中
+        List<ShoppingCart> list = shoppingCartMapper.list(shoppingCart);
+        //这就是数据库中真正要删去的对象
+        ShoppingCart cart = list.get(0);
+        //判断数据库数量是否大于1，如果大于，只是数量-1，然后更新updateNumberById
+        if(cart.getNumber()>1){
+            cart.setNumber(cart.getNumber()-1);
+            shoppingCartMapper.updateNumberById(cart);
+        }else{
+            //如果数据库中数量小于等于1，直接将这条数据删除根据id
+            shoppingCartMapper.deteleById(cart);
+        }
+    }
+
+    /**
+     * 清空购物车
+     */
+    public void cleanShoppingCart() {
+        Long userId = BaseContext.getCurrentId();
+        shoppingCartMapper.deleteByUserId(userId);
+    }
+
     @Override
     public List<ShoppingCart> showShoppingCart() {
         ShoppingCart cart=ShoppingCart.builder()
