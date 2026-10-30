@@ -10,6 +10,7 @@ import com.sky.vo.DishItemVO;
 import com.sky.vo.SetmealVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,7 +29,7 @@ public class SetmealController {
     @Autowired
     private DishMapper dishMapper;
 
-
+    @Cacheable(cacheNames = "setmealCache",key="#categoryId")
     @GetMapping("/list")
     public Result<List<Setmeal>> list(Long categoryId){
         List<Setmeal> setmealList = setmealService.list(categoryId);
