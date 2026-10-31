@@ -51,6 +51,46 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private UserMapper userMapper;
 
+    /**
+     * 用户取消订单
+     * @param id
+     */
+    public void userCacelById(Long id) throws Exception {
+        //首先获取订单
+        Orders orders = orderMapper.getById(id);
+        //如果订单不存在，抛出异常
+        if(orders==null){
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+        //用户取消订单首先判断订单状态1待付款 2待接单 3已接单 4派送中 5已完成 6已取消
+        //已结单或者派送中情况，需要电话沟通商家，然后决定是否取消
+        if(orders.getStatus()>2){
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+
+        if(orders.getStatus().equals(Orders.TO_BE_CONFIRMED)){
+            //如果状态为待接单，将钱返回然后变为已取消
+            weChatPayUtil.refund(
+                    orders.getNumber(),
+                    orders.getNumber(),
+                    new BigDecimal(0.01),
+                    new BigDecimal(0.01)
+            );
+            //并且将支付状态修改为已退款
+            orders.setPayStatus(Orders.CANCELLED);
+        }
+        //如果状态为待付款，直接将状态变为已取消
+        orders.setStatus(Orders.CANCELLED);
+        orders.setCancelReason("用户取消");
+        orders.setCancelTime(LocalDateTime.now());
+        orderMapper.update(orders);
+    }
+
+    /**
+     * 查看订单详情
+     * @param id
+     * @return
+     */
     @Override
     public OrderVO details(Long id) {
         Orders order = orderMapper.getById(id);
