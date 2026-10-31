@@ -25,11 +25,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class OrderServiceImpl implements OrderService {
@@ -52,6 +54,53 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private UserMapper userMapper;
 
+    /**
+     * 订单搜索功能
+     * @param ordersPageQueryDTO
+     * @return
+     */
+    @Override
+    public PageResult conditionSearch(OrdersPageQueryDTO ordersPageQueryDTO) {
+        PageHelper.startPage(ordersPageQueryDTO.getPage(),ordersPageQueryDTO.getPageSize());
+        Page<Orders> orders = orderMapper.pageQuery(ordersPageQueryDTO);
+        //还需要返回订单所包含的菜品
+        List<OrderVO> orderVOS = getOrderVOList(orders);
+        return new PageResult(orders.getTotal(),orderVOS);
+    }
+
+    private List<OrderVO> getOrderVOList(Page<Orders> orders){
+        //OrderVO继承了Order，可以包含Order的所有信息，还可以给出所有的菜品信息，然后还多出了一个List<OrderDetail>,前端不用就行了
+        //创建一个返回数据，里面会包含所有的Order和Order所包含的菜品具体信息
+        List<OrderVO> orderVOList = new ArrayList<>();
+        List<Orders> ordersList = orders.getResult();
+        //如果要查找的Order数据不为空
+        if(!CollectionUtils.isEmpty(ordersList)){
+            for(Orders order:ordersList){
+                OrderVO orderVO = new OrderVO();
+                BeanUtils.copyProperties(order,orderVO);
+                //将订单Order中的菜品信息封装成String
+                String orderDishes = getOrderDishesStr(order);
+                orderVO.setOrderDishes(orderDishes);
+                orderVOList.add(orderVO);
+            }
+        }
+        return orderVOList;
+    }
+
+    /**
+     * 根据订单Order找到Order中的菜品信息转换成String
+     * @param order
+     * @return
+     */
+    private String getOrderDishesStr(Orders order){
+        List<OrderDetail> orderDetailList = orderDetailMapper.getByOrderId(order.getId());
+        //将每一条订单菜品信息拼接为字符串
+        List<String> orderDishList = orderDetailList.stream().map(x->{
+            return x.getName()+"*"+x.getNumber()+";";
+        }).collect(Collectors.toList());
+        //将得到的所有的String拼成一条
+        return String.join("",orderDishList);
+    }
 
 
     /**
@@ -238,6 +287,7 @@ public class OrderServiceImpl implements OrderService {
         orders.setPhone(addressBook.getPhone());
         orders.setConsignee(addressBook.getConsignee());
         orders.setUserId(userId);
+        orders.setAddress(addressBook.getDetail());
         orderMapper.insert(orders);
 
         List<OrderDetail> orderDetailList = new ArrayList<>();
