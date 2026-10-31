@@ -1,6 +1,8 @@
 package com.sky.controller.admin;
 
+import com.sky.dto.OrdersConfirmDTO;
 import com.sky.dto.OrdersPageQueryDTO;
+import com.sky.dto.OrdersRejectionDTO;
 import com.sky.result.PageResult;
 import com.sky.result.Result;
 import com.sky.service.OrderService;
@@ -8,10 +10,7 @@ import com.sky.vo.OrderStatisticsVO;
 import com.sky.vo.OrderVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController("adminOrderController")
 @RequestMapping("/admin/order")
@@ -21,6 +20,28 @@ public class OrderController {
     @Autowired
     private OrderService orderService;
 
+
+    /**
+     * 拒单
+     * @param ordersRejectionDTO
+     * @return
+     */
+    @PutMapping("/rejection")
+    public Result reject(@RequestBody OrdersRejectionDTO ordersRejectionDTO) throws Exception{
+        orderService.reject(ordersRejectionDTO);
+        return Result.success();
+    }
+
+    /**
+     * 接单
+     * @param ordersConfirmDTO
+     * @return
+     */
+    @PutMapping("/confirm")
+    public Result confirm(@RequestBody OrdersConfirmDTO ordersConfirmDTO){
+        orderService.confirm(ordersConfirmDTO);
+        return Result.success();
+    }
 
     /**
      * 订单详情

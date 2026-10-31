@@ -6,9 +6,7 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.sky.constant.MessageConstant;
 import com.sky.context.BaseContext;
-import com.sky.dto.OrdersPageQueryDTO;
-import com.sky.dto.OrdersPaymentDTO;
-import com.sky.dto.OrdersSubmitDTO;
+import com.sky.dto.*;
 import com.sky.entity.*;
 import com.sky.exception.AddressBookBusinessException;
 import com.sky.exception.OrderBusinessException;
@@ -21,6 +19,7 @@ import com.sky.vo.OrderPaymentVO;
 import com.sky.vo.OrderStatisticsVO;
 import com.sky.vo.OrderSubmitVO;
 import com.sky.vo.OrderVO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
@@ -35,6 +34,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class OrderServiceImpl implements OrderService {
 
     @Autowired
@@ -54,6 +54,47 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private UserMapper userMapper;
+
+    /**
+     * 拒单
+     * @param ordersRejectionDTO
+     * @return
+     */
+    public void reject(OrdersRejectionDTO ordersRejectionDTO) throws Exception{
+        Orders orders = orderMapper.getById(ordersRejectionDTO.getId());
+        //只有在订单状态为待接单并且存在时才能接单
+        if(orders ==null||!orders.getStatus().equals(Orders.TO_BE_CONFIRMED)){
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+        //查看支付状态
+        Integer payStatus = orders.getPayStatus();
+        if(payStatus==Orders.PAID){
+            //用户已经支付需要退款
+            String refund = weChatPayUtil.refund(
+                    orders.getNumber(),
+                    orders.getNumber(),
+                    new BigDecimal(0.01),
+                    new BigDecimal(0.01));
+            log.info("申请退款:{}",refund);
+        }
+        Orders ordernew = new Orders();
+        ordernew.setId(orders.getId());
+        ordernew.setStatus(Orders.CANCELLED);
+        ordernew.setRejectionReason(ordersRejectionDTO.getRejectionReason());
+        ordernew.setCancelTime(LocalDateTime.now());
+        orderMapper.update(ordernew);
+    }
+
+    /**
+     * 接单
+     * @param ordersConfirmDTO
+     */
+    public void confirm(OrdersConfirmDTO ordersConfirmDTO) {
+        Orders orders = new Orders();
+        orders.setId(ordersConfirmDTO.getId());
+        orders.setStatus(Orders.CONFIRMED);
+        orderMapper.update(orders);
+    }
 
     /**
      * 各个状态的订单数量统计
