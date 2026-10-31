@@ -13,6 +13,7 @@ import com.sky.exception.OrderBusinessException;
 import com.sky.exception.ShoppingCartBusinessException;
 import com.sky.mapper.*;
 import com.sky.result.PageResult;
+import com.sky.result.Result;
 import com.sky.service.OrderService;
 import com.sky.utils.WeChatPayUtil;
 import com.sky.vo.OrderPaymentVO;
@@ -26,6 +27,8 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -54,6 +57,67 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private UserMapper userMapper;
+
+    /**
+     * 完成订单
+     * @param id
+     * @throws Exception
+     */
+    public void complete(Long id) throws Exception {
+        Orders orders = orderMapper.getById(id);
+        //只有订单状态为派送中可以点
+        if(orders==null||!orders.getStatus().equals(Orders.DELIVERY_IN_PROGRESS)){
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+        Orders ordersnew = new Orders();
+        ordersnew.setId(orders.getId());
+        ordersnew.setStatus(Orders.COMPLETED);
+        ordersnew.setDeliveryTime(LocalDateTime.now());
+        orderMapper.update(ordersnew);
+    }
+
+    /**
+     * 派送订单
+     * @param id
+     * @throws Exception
+     */
+    public void dilivery(Long id) throws Exception {
+        Orders orders = orderMapper.getById(id);
+        //只有订单状态为待派送可以点
+        if(orders==null||!orders.getStatus().equals(Orders.CONFIRMED)){
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+        Orders ordersnew = new Orders();
+        ordersnew.setId(orders.getId());
+        ordersnew.setStatus(Orders.DELIVERY_IN_PROGRESS);
+        orderMapper.update(ordersnew);
+
+    }
+
+    /**
+     * 取消订单
+     * @param ordersCancelDTO
+     * @return
+     */
+    public void cancel(OrdersCancelDTO ordersCancelDTO) throws Exception {
+        //取消订单时查询用户是否支付，如果支付了需要退款
+        Orders orders = orderMapper.getById(ordersCancelDTO.getId());
+        Integer payStatus = orders.getPayStatus();
+        if(payStatus==1){
+            String refund = weChatPayUtil.refund(
+                    orders.getNumber(),
+                    orders.getNumber(),
+                    new BigDecimal(0.01),
+                    new BigDecimal(0.01));
+            log.info("申请退款:{}",refund);
+        }
+        Orders ordersnew = new Orders();
+        ordersnew.setStatus(Orders.CANCELLED);
+        ordersnew.setCancelReason(ordersCancelDTO.getCancelReason());
+        ordersnew.setId(ordersCancelDTO.getId());
+        ordersnew.setCancelTime(LocalDateTime.now());
+        orderMapper.update(ordersnew);
+    }
 
     /**
      * 拒单
