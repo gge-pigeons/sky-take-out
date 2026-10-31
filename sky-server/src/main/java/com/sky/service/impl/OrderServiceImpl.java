@@ -1,6 +1,7 @@
 package com.sky.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.ser.Serializers;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.sky.constant.MessageConstant;
@@ -50,6 +51,30 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private UserMapper userMapper;
+
+
+
+    /**
+     * 再来一单
+     * @param id
+     * @return
+     */
+    public void repetition(Long id) {
+        //查询当前用户Id
+        Long userId = BaseContext.getCurrentId();
+        //将原订单中的商品重新加入到购物车中
+        List<OrderDetail> orderDetailList = orderDetailMapper.getByOrderId(id);
+        List<ShoppingCart> shoppingCartList = new ArrayList<>();
+        orderDetailList.forEach(orderDetail -> {
+            ShoppingCart shoppingCart = new ShoppingCart();
+            BeanUtils.copyProperties(orderDetail,shoppingCart,"id");
+            shoppingCart.setUserId(BaseContext.getCurrentId());
+            shoppingCart.setCreateTime(LocalDateTime.now());
+            shoppingCartList.add(shoppingCart);
+        });
+        //将购物车信息批量添加到数据库中
+        shoppingCartMapper.insertBatch(shoppingCartList);
+    }
 
     /**
      * 用户取消订单

@@ -51,4 +51,12 @@ public interface OrderService {
      * @param id
      */
     void userCacelById (Long id) throws Exception;
+
+
+    /**
+     * 再来一单
+     * @param id
+     * @return
+     */
+    void repetition(Long id);
 }
