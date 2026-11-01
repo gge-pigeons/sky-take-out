@@ -22,6 +22,16 @@ public class OrderController {
     @Autowired
     private OrderService orderService;
 
+    /**
+     * 客户催单
+     * @param id
+     * @return
+     */
+    @GetMapping("/reminder/{id}")
+    public Result reminder(@PathVariable("id") Long id){
+        orderService.reminder(id);
+        return Result.success();
+    }
 
     /**
      * 再来一单

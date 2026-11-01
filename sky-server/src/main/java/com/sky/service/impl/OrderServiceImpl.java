@@ -75,6 +75,24 @@ public class OrderServiceImpl implements OrderService {
     private WebSocketServer webSocketServer;
 
     /**
+     * 用户催单
+     * @param id
+     */
+    public void reminder(Long id) {
+        Orders orders = orderMapper.getById(id);
+        //如果订单是空抛出异常
+        if(orders==null){
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+        Map map = new HashMap<>();
+        map.put("type",2);//2表示客户催单
+        map.put("orderId",id);
+        map.put("content","订单号:"+orders.getNumber());
+        String json =JSON.toJSONString(map);
+        webSocketServer.sendToAllClient(json);
+    }
+
+    /**
      * 检查客户的收货地址是否超出配送范围
      * @param address
      */
